@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مستشارك الجامعي السعودي الشامل</title>
+    <style>
+        :root { --primary: #2c3e50; --secondary: #27ae60; --bg: #f8f9fa; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; transition: 0.5s; text-align: right; }
+        .main-container { background: white; max-width: 1000px; margin: auto; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: var(--primary); margin-bottom: 10px; }
+        h3 { border-right: 5px solid var(--secondary); padding-right: 10px; background: #f0fdf4; padding: 10px; border-radius: 5px; color: var(--primary); }
+        .input-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        input[type="number"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-bottom: 25px; }
+        .item { background: #fff; border: 1px solid #eee; padding: 10px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; font-size: 0.9em; transition: 0.2s; }
+        .item:hover { background: #f1f1f1; }
+        .item input { margin-left: 10px; }
+        button { width: 100%; padding: 20px; background: var(--secondary); color: white; border: none; border-radius: 10px; font-size: 1.2em; font-weight: bold; cursor: pointer; box-shadow: 0 4px 15px rgba(39,174,96,0.3); }
+        button:hover { background: #219150; transform: translateY(-2px); }
+        #results { margin-top: 30px; }
+        .card { background: #fff; border-right: 8px solid var(--secondary); padding: 20px; margin-bottom: 15px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); animation: slideIn 0.5s ease forwards; }
+        .score-tag { float: left; background: #e8f6f3; color: var(--secondary); padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+        .uni-list { font-size: 0.85em; color: #666; margin-top: 10px; line-height: 1.6; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+    </style>
+</head>
+<body onclick="document.body.style.backgroundColor = 'hsl(' + Math.random() * 360 + ', 30%, 95%)'">
+
+<div class="main-container" onclick="event.stopPropagation()">
+    <h1>🎓 مستشارك الأكاديمي الموسّع</h1>
+    <p style="text-align: center; color: #777;">نظام ذكي لتحليل التوافق مع التخصصات والجامعات السعودية</p>
+
+    <h3>1️⃣ المعدلات الدراسية</h3>
+    <div class="input-section">
+        <div><label>القدرات</label><input type="number" id="q" placeholder="0-100" value="85"></div>
+        <div><label>التحصيلي</label><input type="number" id="t" placeholder="0-100" value="85"></div>
+        <div><label>الثانوية</label><input type="number" id="s" placeholder="0-100" value="98"></div>
+    </div>
+
+    <h3>2️⃣ مهاراتك الشخصية</h3>
+    <div id="skills_grid" class="check-grid"></div>
+
+    <h3>3️⃣ اهتماماتك</h3>
+    <div id="interests_grid" class="check-grid"></div>
+
+    <h3>4️⃣ أمنياتك وأهدافك</h3>
+    <div id="wishes_grid" class="check-grid"></div>
+
+    <button onclick="calculateMatch()">تحليل التوافق وإظهار النتائج</button>
+
+    <div id="results"></div>
+</div>
+
+<script>
+    const skills = ["البرمجة", "التفكير التحليلي", "التفكير النقدي", "حل المشكلات", "التواصل الفعال", "القيادة", "العمل الجماعي", "إدارة الوقت", "الإقناع", "الإبداع", "التصميم", "الرسم", "البحث العلمي", "استخدام الحاسب", "تحليل البيانات", "إدارة المشاريع", "التفاوض", "كتابة المحتوى", "الذكاء العاطفي", "التعلم السريع", "تنظيم المعلومات"];
+    const interests = ["الذكاء الاصطناعي", "التقنية", "الألعاب الإلكترونية", "الطب والصحة", "الفضاء", "ريادة الأعمال", "السفر", "الإعلام الرقمي", "الأفلام والمسلسلات", "التصوير", "التصميم", "الموضة", "البيئة والاستدامة", "التجارة الإلكترونية", "الاستثمار", "تطوير التطبيقات", "علم النفس", "الرياضة", "القراءة والكتب"];
+    const wishes = ["دخل مرتفع", "وظيفة مستقرة", "عمل حر", "العمل عن بعد", "السفر المستمر", "تأسيس مشروع خاص", "الشهرة المهنية", "التأثير في المجتمع", "تطوير الذات", "الاستقلال المالي", "وظيفة في شركة عالمية", "الإبداع والتميز", "حياة مرنة بدون دوام ثابت"];
+
+    const unis = {
+        gov: ["جامعة الملك سعود", "جامعة الملك عبدالعزيز", "جامعة الملك فهد للبترول والمعادن", "جامعة الإمام محمد بن سعود", "جامعة أم القرى", "جامعة طيبة", "جامعة القصيم", "جامعة جازان", "جامعة نجران", "جامعة الحدود الشمالية", "جامعة حائل", "جامعة المجمعة", "جامعة شقراء", "جامعة الجوف", "جامعة الباحة", "جامعة الملك خالد"],
+        priv: ["جامعة الأمير سلطان", "جامعة الفيصل", "جامعة اليمامة", "جامعة دار الحكمة", "جامعة رياض العلم", "جامعة المعرفة", "جامعة دار العلوم"]
+    };
+
+    const majors = [
+        { n: "الذكاء الاصطناعي", min: 85, s: ["البرمجة", "التفكير التحليلي", "التعلم السريع"], i: ["الذكاء الاصطناعي", "التقنية"], w: ["دخل مرتفع", "الإبداع والتميز"], u: [unis.gov[0], unis.gov[2], unis.priv[1]] },
+        { n: "علوم البيانات", min: 82, s: ["تحليل البيانات", "التفكير النقدي"], i: ["التقنية", "الاستثمار"], w: ["العمل في شركة عالمية", "دخل مرتفع"], u: [unis.gov[0], unis.gov[1], unis.priv[0]] },
+        { n: "الأمن السيبراني", min: 80, s: ["حل المشكلات", "التفكير النقدي"], i: ["التقنية"], w: ["وظيفة مستقرة", "دخل مرتفع"], u: [unis.gov[12], unis.gov[11], unis.priv[2]] },
+        { n: "تطوير الألعاب", min: 75, s: ["البرمجة", "الإبداع"], i: ["الألعاب الإلكترونية", "البرمجة"], w: ["عمل حر", "الإبداع والتميز"], u: [unis.gov[0], unis.priv[0]] },
+        { n: "الحوسبة السحابية", min: 80, s: ["استخدام الحاسب", "إدارة المشاريع"], i: ["التقنية"], w: ["العمل عن بعد", "دخل مرتفع"], u: [unis.gov[2], unis.gov[3]] },
+        { n: "الطب العام", min: 92, s: ["البحث العلمي", "الذكاء العاطفي", "حل المشكلات"], i: ["الطب والصحة"], w: ["التأثير في المجتمع", "دخل مرتفع"], u: [unis.gov[0], unis.gov[4], unis.priv[1]] },
+        { n: "طب الأسنان", min: 90, s: ["الرسم", "التواصل الفعال"], i: ["الطب والصحة"], w: ["الاستقلال المالي", "تأسيس مشروع خاص"], u: [unis.gov[0], unis.gov[1], unis.priv[4]] },
+        { n: "العلاج الطبيعي", min: 80, s: ["التواصل الفعال", "التعلم السريع"], i: ["الرياضة", "الطب والصحة"], w: ["تطوير الذات"], u: [unis.gov[15], unis.gov[5], unis.gov[11]] },
+        { n: "الطب البيطري", min: 75, s: ["الملاحظة", "البحث العلمي"], i: ["البيئة والاستدامة"], w: ["وظيفة مستقرة"], u: [unis.gov[6], unis.gov[1]] },
+        { n: "الهندسة المدنية", min: 80, s: ["التفكير التحليلي", "إدارة المشاريع"], i: ["الهندسة"], w: ["وظيفة مستقرة"], u: [unis.gov[2], unis.gov[0], unis.gov[13]] },
+        { n: "هندسة الطيران", min: 88, s: ["التفكير النقدي", "التعلم السريع"], i: ["الفضاء", "التقنية"], w: ["الشهرة المهنية", "السفر المستمر"], u: [unis.gov[2], unis.gov[1]] },
+        { n: "الهندسة المعمارية", min: 85, s: ["التصميم", "الإبداع"], i: ["التصميم", "الموضة"], w: ["الإبداع والتميز", "تأسيس مشروع خاص"], u: [unis.gov[0], unis.gov[4], unis.priv[3]] },
+        { n: "التسويق الرقمي", min: 75, s: ["الإقناع", "كتابة المحتوى"], i: ["الإعلام الرقمي", "التجارة الإلكترونية"], w: ["عمل حر", "الاستقلال المالي"], u: [unis.gov[1], unis.priv[2]] },
+        { n: "ريادة الأعمال", min: 70, s: ["القيادة", "التفاوض"], i: ["ريادة الأعمال", "الاستثمار"], w: ["تأسيس مشروع خاص", "الاستقلال المالي"], u: [unis.priv[1], unis.priv[0]] },
+        { n: "إدارة سلاسل الإمداد", min: 75, s: ["تنظيم المعلومات", "إدارة الوقت"], i: ["التجارة الإلكترونية"], w: ["العمل في شركة عالمية"], u: [unis.gov[0], unis.gov[1]] },
+        { n: "الإخراج السينمائي", min: 70, s: ["القيادة", "الإبداع"], i: ["الأفلام والمسلسلات", "التصوير"], w: ["الشهرة المهنية", "حياة مرنة بدون دوام ثابت"], u: [unis.gov[0], unis.priv[3]] },
+        { n: "التصميم الجرافيكي", min: 70, s: ["التصميم", "الرسم"], i: ["التصميم", "الموضة"], w: ["عمل حر", "الإبداع والتميز"], u: [unis.gov[3], unis.priv[3]] },
+        { n: "القانون", min: 80, s: ["التفاوض", "التفكير النقدي", "الإقناع"], i: ["علم النفس", "القراءة والكتب"], w: ["دخل مرتفع", "التأثير في المجتمع"], u: [unis.gov[0], unis.gov[1], unis.priv[7]] },
+        { n: "علم النفس", min: 75, s: ["الذكاء العاطفي", "التواصل الفعال"], i: ["علم النفس"], w: ["تطوير الذات"], u: [unis.gov[0], unis.gov[3]] }
+    ];
+
+    function populate(data, gridId) {
+        const grid = document.getElementById(gridId);
+        data.forEach(val => {
+            const label = document.createElement('label');
+            label.className = 'item';
+            label.innerHTML = `<input type="checkbox" value="${val}"> ${val}`;
+            grid.appendChild(label);
+        });
+    }
+
+    populate(skills, 'skills_grid');
+    populate(interests, 'interests_grid');
+    populate(wishes, 'wishes_grid');
+
+    function calculateMatch() {
+        const q = Number(document.getElementById('q').value) || 0;
+        const t = Number(document.getElementById('t').value) || 0;
+        const s = Number(document.getElementById('s').value) || 0;
+        const avgGrade = (q + t + s) / 3;
+
+        const selSkills = Array.from(document.querySelectorAll('#skills_grid input:checked')).map(i => i.value);
+        const selInterests = Array.from(document.querySelectorAll('#interests_grid input:checked')).map(i => i.value);
+        const selWishes = Array.from(document.querySelectorAll('#wishes_grid input:checked')).map(i => i.value);
+
+        let finalScores = majors.map(m => {
+            let sMatch = m.s.filter(x => selSkills.includes(x)).length;
+            let sScore = (sMatch / m.s.length) * 40;
+            let iMatch = m.i.filter(x => selInterests.includes(x)).length;
+            let iScore = (iMatch / m.i.length) * 30;
+            let wMatch = m.w.filter(x => selWishes.includes(x)).length;
+            let wScore = (wMatch / m.w.length) * 20;
+            let gScore = (avgGrade >= m.min) ? 10 : (avgGrade / m.min) * 10;
+            let total = sScore + iScore + wScore + gScore;
+            return { ...m, finalScore: total.toFixed(1) };
+        });
+
+        finalScores.sort((a, b) => b.finalScore - a.finalScore);
+        display(finalScores.slice(0, 5));
+    }
+
+    function display(results) {
+        const resDiv = document.getElementById('results');
+        resDiv.innerHTML = '<h3>🌟 التخصصات الأكثر توافقاً معك:</h3>';
+        results.forEach(m => {
+            resDiv.innerHTML += `
+                <div class="card">
+                    <span class="score-tag">${m.finalScore}% توافق</span>
+                    <strong>${m.n}</strong>
+                    <div class="uni-list">
+                        📍 <b>الجامعات المتاحة:</b> ${m.u.join('، ')}
+                    </div>
+                </div>
+            `;
+        });
+        window.scrollTo({ top: resDiv.offsetTop, behavior: 'smooth' });
+    }
+</script>
+</body>
+</html>
